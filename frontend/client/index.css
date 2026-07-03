@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: #0b0d12;
+  /* subtle blueprint grid for an "IDE" atmosphere */
+  background-image:
+    radial-gradient(circle at 15% -10%, rgba(245, 165, 36, 0.08), transparent 40%),
+    radial-gradient(circle at 90% 0%, rgba(61, 215, 192, 0.07), transparent 35%),
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 28px 28px, 28px 28px;
+  color: #e7ebf3;
+  font-family: 'Sora', sans-serif;
+}
+
+@layer components {
+  .glass {
+    @apply bg-panel/70 backdrop-blur-md border border-line rounded-2xl;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-amber px-5 py-2.5
+           font-semibold text-ink transition hover:brightness-110 active:scale-[0.98]
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-line
+           px-5 py-2.5 font-medium text-e7ebf3 transition hover:border-amber/60 hover:text-amber;
+  }
+  .input {
+    @apply w-full rounded-xl border border-line bg-ink/60 px-4 py-2.5 text-sm outline-none
+           transition focus:border-amber/70 focus:ring-2 focus:ring-amber/20;
+  }
+  .label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted;
+  }
+}
+
+/* scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #2a3145; border-radius: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
