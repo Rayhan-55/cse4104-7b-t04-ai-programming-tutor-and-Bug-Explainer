@@ -204,6 +204,15 @@ AI Programming Tutor & Bug Explainer/
 │            ├── database_documentation.md   # All 4 collections — fields,
 │
 └──diagrams/
+│         ├── activity_Diagram.jpg
+│         ├── Erdiagram.jpg
+│         ├── System Architechture diagram.jpg
+│         ├── User Flow Diagram.jpg
+│         ├── User Case Diagram.jpg 
+│ 
+└──screenshots/
+        ├── api_export.jpg
+        ├── login.jpg
 
 ```
 ---
