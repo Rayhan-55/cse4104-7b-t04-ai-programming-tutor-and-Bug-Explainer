@@ -18,6 +18,7 @@ export const AuthAPI = {
   register: (body) => api.post('/auth/register', body).then((r) => r.data),
   login: (body) => api.post('/auth/login', body).then((r) => r.data),
   me: () => api.get('/auth/me').then((r) => r.data),
+  updateProfile: (body) => api.patch('/auth/profile', body).then((r) => r.data),
 };
 
 export const AiAPI = {
