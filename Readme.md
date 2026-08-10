@@ -116,104 +116,108 @@ Secure registration and login using JWT tokens and bcrypt password hashing. Supp
 AI Programming Tutor & Bug Explainer/
 │
 ├── frontend/
-│ ├── client/                             # React (Vite) Frontend
-│   ├── index.html
-│   ├── vite.config.js
-│   ├── tailwind.config.js
-│   ├── postcss.config.js
-│   ├── .env.example
-│   └── src/
-│       ├── main.jsx                    # App entry point
-│       ├── App.jsx                     # Routes and layout
-│       ├── index.css                   # Global styles
-│       │
-│       ├── api/
-│       │   └── client.js               # Axios instance with JWT interceptor
-│       │
-│       ├── context/
-│       │   └── AuthContext.jsx         # Global auth state (JWT, user)
-│       │
-│       ├── components/
-│       │   ├── Navbar.jsx              # Top navigation bar
-│       │   ├── ProtectedRoute.jsx      # Route guard for auth
-│       │   ├── CodeEditor.jsx          # Monaco VS Code-style editor
-│       │   ├── VoiceButton.jsx         # Text-to-speech button
-│       │   ├── AIResultCard.jsx        # AI response display card
-│       │   └── Markdown.jsx            # Markdown renderer for AI output
-│       │
-│       └── pages/
-│           ├── Landing.jsx             # Home / hero page
-│           ├── Login.jsx               # Login form
-│           ├── Register.jsx            # Registration form
-│           ├── Dashboard.jsx           # XP, streak, charts, history
-│           ├── Tutor.jsx               # AI Coding Tutor page
-│           ├── BugExplainer.jsx        # Bug Explainer page
-│           ├── CompilerTranslator.jsx  # Compiler Error Translator page
-│           ├── CodeImprover.jsx        # Code Improver page
-│           ├── RepoExplainer.jsx       # GitHub Repo Explainer page
-│           ├── DocExplainer.jsx        # PDF / Image Explainer page
-│           └── Admin.jsx               # Admin panel page
+│   └── client/                             # React (Vite) Frontend
+│       ├── index.html
+│       ├── vite.config.js
+│       ├── tailwind.config.js
+│       ├── postcss.config.js
+│       ├── .env.example
+│       └── src/
+│           ├── main.jsx                    # App entry point
+│           ├── App.jsx                     # Routes and layout
+│           ├── index.css                   # Global styles
+│           │
+│           ├── api/
+│           │   └── client.js               # Axios instance with JWT interceptor
+│           │
+│           ├── context/
+│           │   └── AuthContext.jsx         # Global auth state (JWT, user)
+│           │
+│           ├── components/
+│           │   ├── Navbar.jsx              # Top navigation bar
+│           │   ├── ProtectedRoute.jsx      # Route guard for auth
+│           │   ├── CodeEditor.jsx          # Monaco VS Code-style editor
+│           │   ├── VoiceButton.jsx         # Text-to-speech button
+│           │   ├── AIResultCard.jsx        # AI response display card
+│           │   └── Markdown.jsx            # Markdown renderer for AI output
+│           │
+│           └── pages/
+│               ├── Landing.jsx             # Home / hero page
+│               ├── Login.jsx               # Login form
+│               ├── Register.jsx            # Registration form
+│               ├── Dashboard.jsx           # XP, streak, charts, history
+│               ├── Tutor.jsx               # AI Coding Tutor page
+│               ├── BugExplainer.jsx        # Bug Explainer page
+│               ├── CompilerTranslator.jsx  # Compiler Error Translator page
+│               ├── CodeImprover.jsx        # Code Improver page
+│               ├── RepoExplainer.jsx       # GitHub Repo Explainer page
+│               ├── DocExplainer.jsx        # PDF / Image Explainer page
+│               └── Admin.jsx               # Admin panel page
 │
-└──backend/
-│  ├──server/                             # Node.js + Express Backend
-│    ├── .env.example
-│    └── src/
-│        ├── server.js                   # Express app entry point
-│        │
-│        ├── config/
-│        │   └── db.js                   # MongoDB Atlas connection
-│        │
-│        ├── models/
-│        │   ├── User.js                 # User schema (xp, streak, role, bcrypt)
-│        │   ├── ChatHistory.js          # Per-user AI conversation history
-│        │   ├── Memory.js               # Persistent learner memory notes
-│        │   └── WeakTopic.js            # Weak topic tracking per user
-│        │
-│        ├── middleware/
-│        │   ├── auth.js                 # JWT protect / optionalProtect / adminOnly
-│        │   └── errorHandler.js         # Global error handler
-│        │
-│        ├── controllers/
-│        │   ├── authController.js       # register, login, getMe
-│        │   ├── aiController.js         # tutor, bugExplainer, errorTranslator, codeImprover, problem
-│        │   ├── repoController.js       # GitHub repo overview and file explanation
-│        │   ├── docController.js        # PDF and image explanation (multer + vision)
-│        │   └── adminController.js      # stats, users, delete, role management
-│        │
-│        ├── routes/
-│        │   ├── authRoutes.js           # /api/auth/*
-│        │   ├── aiRoutes.js             # /api/ai/*
-│        │   ├── repoRoutes.js           # /api/repo/*
-│        │   ├── docRoutes.js            # /api/doc/*
-│        │   └── adminRoutes.js          # /api/admin/*
-│        │
-│        └── services/
-│            ├── aiService.js            # askAI() and askAIVision() — provider abstraction
-│            ├── prompts.js              # All system prompts and buildUserMessage()
-│            ├── memoryService.js        # Read/write learner memory and weak topics
-│            └── githubService.js        # GitHub REST API fetch for repo explainer
+├── backend/
+│   └── server/                             # Node.js + Express Backend
+│       ├── .env.example
+│       └── src/
+│           ├── server.js                   # Express app entry point
+│           │
+│           ├── config/
+│           │   └── db.js                   # MongoDB Atlas connection
+│           │
+│           ├── models/
+│           │   ├── User.js                 # User schema (xp, streak, role, bcrypt)
+│           │   ├── ChatHistory.js          # Per-user AI conversation history
+│           │   ├── Memory.js               # Persistent learner memory notes
+│           │   └── WeakTopic.js            # Weak topic tracking per user
+│           │
+│           ├── middleware/
+│           │   ├── auth.js                 # JWT protect / optionalProtect / adminOnly
+│           │   └── errorHandler.js         # Global error handler
+│           │
+│           ├── controllers/
+│           │   ├── authController.js       # register, login, getMe
+│           │   ├── repoController.js       # GitHub repo overview and file explanation
+│           │   ├── docController.js        # PDF and image explanation (multer + vision)
+│           │   └── adminController.js      # stats, users, delete, role management
+│           │
+│           ├── routes/
+│           │   ├── authRoutes.js           # /api/auth/*
+│           │   ├── repoRoutes.js           # /api/repo/*
+│           │   ├── docRoutes.js            # /api/doc/*
+│           │   └── adminRoutes.js          # /api/admin/*
+│           │
+│           └── services/
+│               └── githubService.js        # GitHub REST API fetch for repo explainer
 │
+├── ai/
+│   ├── controllers/
+│   │   └── aiController.js                 # tutor, bugExplainer, errorTranslator, codeImprover
+│   │
+│   ├── routes/
+│   │   └── aiRoutes.js                     # /api/ai/*
+│   │
+│   └── services/
+│       ├── aiService.js                    # askAI() and askAIVision() — provider abstraction
+│       ├── prompts.js                      # All system prompts and buildUserMessage()
+│       └── memoryService.js                # Read/write learner memory and weak topics
 │
-└──database/
-│        ├── users.json                  # Sample user documents
-│        ├── chathistories.json          # Sample chat history documents
-│        ├── memories.json               # Sample memory documents
-│        └── weaktopics.json             # Sample weak topic documents
+├── database/
+│   ├── users.json                          # Sample user documents
+│   ├── chathistories.json                  # Sample chat history documents
+│   ├── memories.json                       # Sample memory documents
+│   └── weaktopics.json                     # Sample weak topic documents
 │
-└──documentation/
-│            ├── database_documentation.md   # All 4 collections — fields,
+├── documentation/
+│   ├── database_documentation.md           # All 4 collections — fields, types, relations
+│   └── diagrams/
+│       ├── activity_Diagram.jpg
+│       ├── Erdiagram.jpg
+│       ├── System_Architecture_Diagram.jpg
+│       ├── User_Flow_Diagram.jpg
+│       └── Use_Case_Diagram.jpg
 │
-└──diagrams/
-│         ├── activity_Diagram.jpg
-│         ├── Erdiagram.jpg
-│         ├── System Architechture diagram.jpg
-│         ├── User Flow Diagram.jpg
-│         ├── User Case Diagram.jpg 
-│ 
-└──screenshots/
-        ├── api_export.jpg
-        ├── login.jpg
-
+└── screenshots/
+    ├── api_export.jpg
+    └── login.jpg
 ```
 ---
 
