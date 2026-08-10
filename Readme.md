@@ -393,10 +393,9 @@ Relationships:
 
 | Provider | Model | Notes |
 |---|---|---|
-| Groq | `llama-3.3-70b-versatile` | **Recommended** — free tier, OpenAI-compatible API |
-| Google Gemini | `gemini-1.5-flash` | Free tier available, vision support |
-| OpenAI | `gpt-4o-mini` | Paid tier, vision support |
-| Mock | — | Runs without any API key, useful for testing |
+| ANTHROPIC | `claude-haiku-4-5-20251001` | **Recommended** — paid tier |
+| Hugging Face | `meta-llama/Llama-3.1-8B-Instruct` | Free tier available, vision support |
+
 
 ---
 
