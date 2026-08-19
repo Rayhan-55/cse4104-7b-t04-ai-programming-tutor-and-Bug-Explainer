@@ -124,7 +124,7 @@ export default function DocExplainer() {
       </motion.div>
 
       <p className="mt-4 text-center text-xs text-muted">
-        💡 ছবির ভেতরের লেখা/কোড পড়তে AI vision লাগে (Gemini/OpenAI key)। PDF-এর টেক্সট key ছাড়াও পড়া যায়।
+        
       </p>
     </main>
   );

@@ -4,11 +4,13 @@ import { getRepoSnapshot, getFileContent, parseRepoUrl, getRepoMeta } from '../s
 import ChatHistory from '../models/ChatHistory.js';
 import { isDBReady } from '../config/db.js';
 
-async function saveHistory({ userId, message, response }) {
+async function saveHistory({ userId, feature, message, response }) {
   if (!userId || !isDBReady()) return;
   try {
-    await ChatHistory.create({ userId, feature: 'tutor', message, response, topic: 'github-repo' });
-  } catch (_) {}
+    await ChatHistory.create({ userId, feature, message, response, topic: 'github-repo' });
+  } catch (err) {
+    console.error('[history] repo save failed:', err.message);
+  }
 }
 
 // POST /api/repo/overview   body: { url, lang }
@@ -27,7 +29,7 @@ export async function overview(req, res) {
     lang,
   });
 
-  await saveHistory({ userId: req.user?._id, message: `Explain repo: ${snapshot.meta.name}`, response: explanation });
+  await saveHistory({ userId: req.user?._id, feature: 'repoOverview', message: `Explain repo: ${snapshot.meta.name}`, response: explanation });
 
   res.json({
     meta: snapshot.meta,
@@ -50,7 +52,7 @@ export async function file(req, res) {
   const content = await getFileContent({ owner, repo, path, branch: usedBranch });
   const explanation = await askAI('fileExplain', { path, content, lang });
 
-  await saveHistory({ userId: req.user?._id, message: `Explain file: ${path}`, response: explanation });
+  await saveHistory({ userId: req.user?._id, feature: 'fileExplain', message: `Explain file: ${path}`, response: explanation });
 
   res.json({ path, content, explanation });
 }

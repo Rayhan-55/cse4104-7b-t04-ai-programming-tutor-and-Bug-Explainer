@@ -7,8 +7,10 @@ import { isDBReady } from '../config/db.js';
 async function saveHistory({ userId, message, response }) {
   if (!userId || !isDBReady()) return;
   try {
-    await ChatHistory.create({ userId, feature: 'tutor', message, response, topic: 'document' });
-  } catch (_) {}
+    await ChatHistory.create({ userId, feature: 'docExplain', message, response, topic: 'document' });
+  } catch (err) {
+    console.error('[history] doc save failed:', err.message);
+  }
 }
 
 // POST /api/doc/explain  (multipart) — field "file" + optional "lang", "question"

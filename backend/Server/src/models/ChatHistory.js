@@ -6,7 +6,16 @@ const chatHistorySchema = new mongoose.Schema(
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     feature: {
       type: String,
-      enum: ['tutor', 'bugExplainer', 'errorTranslator', 'codeImprover', 'problemGenerator'],
+      enum: [
+        'tutor',
+        'bugExplainer',
+        'errorTranslator',
+        'codeImprover',
+        'problemGenerator',
+        'repoOverview',
+        'fileExplain',
+        'docExplain',
+      ],
       required: true,
     },
     message: { type: String, required: true }, // what the user sent
