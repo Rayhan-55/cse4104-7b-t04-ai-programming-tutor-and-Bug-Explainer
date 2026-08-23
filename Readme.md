@@ -208,7 +208,7 @@ AI Programming Tutor & Bug Explainer/
 │
 ├── documentation/
 │   ├── database_documentation.md           # All 4 collections — fields, types, relations
-│   └── diagrams/
+│── diagrams/
 │       ├── activity_Diagram.jpg
 │       ├── Erdiagram.jpg
 │       ├── System_Architecture_Diagram.jpg
