@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { AiAPI } from '../api/client.js';
 import CodeEditor from '../components/CodeEditor.jsx';
 import AIResultCard from '../components/AIResultCard.jsx';
+import { useAiThread } from '../hooks/useAiThread.js';
 
 const LANGS = ['c', 'cpp', 'java', 'python', 'javascript'];
 const SAMPLE = `for (int i = 0; i <= 5; i++) {\n    arr[i] = i * 2;\n}`;
@@ -12,13 +13,18 @@ export default function BugExplainer() {
   const [language, setLanguage] = useState('cpp');
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
+  const thread = useAiThread();
 
   const run = async () => {
     if (!code.trim()) return;
     setLoading(true);
     setResult('');
+    thread.reset();
     try {
-      setResult(await AiAPI.bug(code, language));
+      const answer = await AiAPI.bug(code, language);
+      setResult(answer);
+      // Give the follow-up thread the original code as context.
+      thread.seed(`Explain the bug in this ${language} code:\n\`\`\`${language}\n${code}\n\`\`\``, answer);
     } catch {
       setResult('**Something went wrong.** Is the backend running?');
     } finally {
@@ -41,7 +47,14 @@ export default function BugExplainer() {
           </div>
           <CodeEditor value={code} onChange={setCode} language={language} />
         </div>
-        <AIResultCard loading={loading} result={result} emptyHint="Paste code and hit “Explain bug”." />
+        <AIResultCard
+          loading={loading}
+          result={result}
+          emptyHint="Paste code and hit “Explain bug”."
+          followUps={thread.followUps}
+          onFollowUp={thread.ask}
+          followUpLoading={thread.followUpLoading}
+        />
       </div>
     </main>
   );

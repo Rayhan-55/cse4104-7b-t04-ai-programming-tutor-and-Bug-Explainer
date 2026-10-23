@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { AiAPI } from '../api/client.js';
 import CodeEditor from '../components/CodeEditor.jsx';
 import AIResultCard from '../components/AIResultCard.jsx';
+import { useAiThread } from '../hooks/useAiThread.js';
 
 const LANGS = ['c', 'cpp', 'java', 'python', 'javascript'];
 const SAMPLE = `function f(a){\n  let r=[];\n  for(let i=0;i<a.length;i++){\n    for(let j=0;j<a.length;j++){\n      if(a[i]===a[j]&&i!==j) r.push(a[i]);\n    }\n  }\n  return r;\n}`;
@@ -12,13 +13,17 @@ export default function CodeImprover() {
   const [language, setLanguage] = useState('javascript');
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
+  const thread = useAiThread();
 
   const run = async () => {
     if (!code.trim()) return;
     setLoading(true);
     setResult('');
+    thread.reset();
     try {
-      setResult(await AiAPI.improve(code, language));
+      const answer = await AiAPI.improve(code, language);
+      setResult(answer);
+      thread.seed(`Suggest improvements for this ${language} code:\n\`\`\`${language}\n${code}\n\`\`\``, answer);
     } catch {
       setResult('**Something went wrong.** Is the backend running?');
     } finally {
@@ -41,7 +46,14 @@ export default function CodeImprover() {
           </div>
           <CodeEditor value={code} onChange={setCode} language={language} />
         </div>
-        <AIResultCard loading={loading} result={result} emptyHint="Suggestions will appear here." />
+        <AIResultCard
+          loading={loading}
+          result={result}
+          emptyHint="Suggestions will appear here."
+          followUps={thread.followUps}
+          onFollowUp={thread.ask}
+          followUpLoading={thread.followUpLoading}
+        />
       </div>
     </main>
   );

@@ -14,6 +14,17 @@ async function saveHistory({ userId, feature, message, response, language, topic
   }
 }
 
+// Sanitizes conversation history sent from the frontend for follow-up questions.
+// Keeps only valid {role, text} turns and caps length so prompts stay small
+// (protects cost + latency). Newest turns are kept.
+function cleanHistory(history, maxTurns = 8, maxCharsEach = 4000) {
+  if (!Array.isArray(history)) return [];
+  return history
+    .filter((t) => t && (t.role === 'user' || t.role === 'assistant') && typeof t.text === 'string')
+    .slice(-maxTurns)
+    .map((t) => ({ role: t.role, text: t.text.slice(0, maxCharsEach) }));
+}
+
 // Awards a little XP for engaging. Best-effort, never blocks the response.
 async function awardXP(user, amount) {
   if (!user || !isDBReady()) return;
@@ -26,11 +37,11 @@ async function awardXP(user, amount) {
 
 // 2. POST /api/ai/tutor
 export async function tutor(req, res) {
-  const { message } = req.body;
+  const { message, history } = req.body;
   if (!message) return res.status(400).json({ message: 'message is required' });
 
   const memory = await getContext(req.user?._id);
-  const response = await askAI('tutor', { message, memory });
+  const response = await askAI('tutor', { message, memory, history: cleanHistory(history) });
   await saveHistory({ userId: req.user?._id, feature: 'tutor', message, response, topic: message });
   await addNote(req.user?._id, `Asked the tutor about: "${message.slice(0, 80)}"`);
   await awardXP(req.user, 5);
@@ -39,11 +50,11 @@ export async function tutor(req, res) {
 
 // 3. POST /api/ai/bug-explainer
 export async function bugExplainer(req, res) {
-  const { code, language } = req.body;
+  const { code, language, history } = req.body;
   if (!code) return res.status(400).json({ message: 'code is required' });
 
   const memory = await getContext(req.user?._id);
-  const response = await askAI('bugExplainer', { code, language, memory });
+  const response = await askAI('bugExplainer', { code, language, memory, history: cleanHistory(history) });
   await saveHistory({ userId: req.user?._id, feature: 'bugExplainer', message: code, response, language });
   await addNote(req.user?._id, `Debugged some ${language || ''} code`.trim());
   await awardXP(req.user, 10);
@@ -52,11 +63,11 @@ export async function bugExplainer(req, res) {
 
 // 4. POST /api/ai/error-translator  (flagship)
 export async function errorTranslator(req, res) {
-  const { error, language } = req.body;
+  const { error, language, history } = req.body;
   if (!error) return res.status(400).json({ message: 'error is required' });
 
   const memory = await getContext(req.user?._id);
-  const response = await askAI('errorTranslator', { error, language, memory });
+  const response = await askAI('errorTranslator', { error, language, memory, history: cleanHistory(history) });
   await saveHistory({ userId: req.user?._id, feature: 'errorTranslator', message: error, response, language });
   await addNote(req.user?._id, `Hit a ${language || ''} error: "${error.slice(0, 60)}"`.trim());
   await awardXP(req.user, 5);
@@ -65,11 +76,11 @@ export async function errorTranslator(req, res) {
 
 // 5. POST /api/ai/code-improver
 export async function codeImprover(req, res) {
-  const { code, language } = req.body;
+  const { code, language, history } = req.body;
   if (!code) return res.status(400).json({ message: 'code is required' });
 
   const memory = await getContext(req.user?._id);
-  const response = await askAI('codeImprover', { code, language, memory });
+  const response = await askAI('codeImprover', { code, language, memory, history: cleanHistory(history) });
   await saveHistory({ userId: req.user?._id, feature: 'codeImprover', message: code, response, language });
   await addNote(req.user?._id, `Asked to improve some ${language || ''} code`.trim());
   await awardXP(req.user, 10);

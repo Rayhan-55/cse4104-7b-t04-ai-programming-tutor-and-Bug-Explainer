@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { AiAPI } from '../api/client.js';
 import AIResultCard from '../components/AIResultCard.jsx';
+import { useAiThread } from '../hooks/useAiThread.js';
 
 const LANGS = ['c', 'cpp', 'java', 'python', 'javascript'];
 const COMMON = ['Segmentation fault', 'NullPointerException', 'Time Limit Exceeded', 'IndexError: list index out of range'];
@@ -11,6 +12,7 @@ export default function CompilerTranslator() {
   const [language, setLanguage] = useState('cpp');
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
+  const thread = useAiThread();
 
   const run = async (text) => {
     const msg = text ?? error;
@@ -18,8 +20,11 @@ export default function CompilerTranslator() {
     setError(msg);
     setLoading(true);
     setResult('');
+    thread.reset();
     try {
-      setResult(await AiAPI.error(msg, language));
+      const answer = await AiAPI.error(msg, language);
+      setResult(answer);
+      thread.seed(`Translate this ${language} error: ${msg}`, answer);
     } catch {
       setResult('**Something went wrong.** Is the backend running?');
     } finally {
@@ -56,7 +61,14 @@ export default function CompilerTranslator() {
       <button className="btn-primary mt-3" disabled={loading} onClick={() => run()}>Translate error</button>
 
       <div className="mt-6">
-        <AIResultCard loading={loading} result={result} emptyHint="The plain-language meaning will appear here." />
+        <AIResultCard
+          loading={loading}
+          result={result}
+          emptyHint="The plain-language meaning will appear here."
+          followUps={thread.followUps}
+          onFollowUp={thread.ask}
+          followUpLoading={thread.followUpLoading}
+        />
       </div>
     </main>
   );

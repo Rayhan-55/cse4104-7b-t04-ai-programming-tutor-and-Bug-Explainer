@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { AiAPI } from '../api/client.js';
 import AIResultCard from '../components/AIResultCard.jsx';
+import { useAiThread } from '../hooks/useAiThread.js';
 
 const examples = ['What is an array?', 'Explain recursion simply', 'What is OOP?', 'Binary search example'];
 
@@ -9,6 +10,7 @@ export default function Tutor() {
   const [q, setQ] = useState('');
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
+  const thread = useAiThread();
 
   const ask = async (text) => {
     const message = text ?? q;
@@ -16,8 +18,11 @@ export default function Tutor() {
     setQ(message);
     setLoading(true);
     setResult('');
+    thread.reset();
     try {
-      setResult(await AiAPI.tutor(message));
+      const answer = await AiAPI.tutor(message);
+      setResult(answer);
+      thread.seed(message, answer);
     } catch {
       setResult('**Something went wrong.** Is the backend running?');
     } finally {
@@ -50,7 +55,14 @@ export default function Tutor() {
       </div>
 
       <div className="mt-6">
-        <AIResultCard loading={loading} result={result} emptyHint="Your tutor's answer will appear here." />
+        <AIResultCard
+          loading={loading}
+          result={result}
+          emptyHint="Your tutor's answer will appear here."
+          followUps={thread.followUps}
+          onFollowUp={thread.ask}
+          followUpLoading={thread.followUpLoading}
+        />
       </div>
     </main>
   );

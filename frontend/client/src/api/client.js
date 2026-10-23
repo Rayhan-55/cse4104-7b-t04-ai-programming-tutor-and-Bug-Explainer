@@ -22,10 +22,25 @@ export const AuthAPI = {
 };
 
 export const AiAPI = {
-  tutor: (message) => api.post('/ai/tutor', { message }).then((r) => r.data.response),
-  bug: (code, language) => api.post('/ai/bug-explainer', { code, language }).then((r) => r.data.response),
-  error: (error, language) => api.post('/ai/error-translator', { error, language }).then((r) => r.data.response),
-  improve: (code, language) => api.post('/ai/code-improver', { code, language }).then((r) => r.data.response),
+  // Each tool now accepts an optional `history` array of prior turns
+  // ([{ role: 'user' | 'assistant', text }]). The backend already threads this
+  // into Claude so the learner can keep a multi-turn conversation.
+  tutor: (message, history = []) =>
+    api.post('/ai/tutor', { message, history }).then((r) => r.data.response),
+  bug: (code, language, history = []) =>
+    api.post('/ai/bug-explainer', { code, language, history }).then((r) => r.data.response),
+  error: (error, language, history = []) =>
+    api.post('/ai/error-translator', { error, language, history }).then((r) => r.data.response),
+  improve: (code, language, history = []) =>
+    api.post('/ai/code-improver', { code, language, history }).then((r) => r.data.response),
+
+  // A follow-up ("bujhlam na", "ekta example dao", "aro shohoj kore bolo") is a
+  // plain text question. We route it through the tutor brain and pass the full
+  // prior thread as history, so Claude already has the original code/error +
+  // its first explanation as context and simply continues the same topic.
+  followUp: (message, history = []) =>
+    api.post('/ai/tutor', { message, history }).then((r) => r.data.response),
+
   history: () => api.get('/ai/history').then((r) => r.data.history),
 };
 

@@ -23,17 +23,15 @@ import { SYSTEM_PROMPTS, buildUserMessage } from './prompts.js';
 // ---- Per-feature provider map ----------------------------------------------
 // Values: "anthropic" | "huggingface" | "gemini" | "openai" | "groq"
 const FEATURE_PROVIDER = {
-  // Claude (Anthropic) — repo overview/file + document & image (vision)
+  // Every feature runs on Claude (Anthropic) now.
   repoOverview: 'anthropic',
   fileExplain: 'anthropic',
   docExplain: 'anthropic',
-
-  // Hugging Face — the rest
-  tutor: 'huggingface',
-  bugExplainer: 'huggingface',
-  errorTranslator: 'huggingface',
-  codeImprover: 'huggingface',
-  problemGenerator: 'huggingface',
+  tutor: 'anthropic',
+  bugExplainer: 'anthropic',
+  errorTranslator: 'anthropic',
+  codeImprover: 'anthropic',
+  problemGenerator: 'anthropic',
 };
 
 // Optional global override. If AI_PROVIDER is set to a real provider it wins for
@@ -131,11 +129,13 @@ async function callOpenAICompat(provider, systemPrompt, userMessage) {
 
 // ---- Provider: Anthropic (Claude) — text + vision --------------------------
 // Uses Anthropic's Messages API. `image` (optional) = { base64, mimeType }.
-async function callAnthropic(systemPrompt, userMessage, image = null) {
+// `history` is an optional array of prior turns: [{ role:'user'|'assistant', text }]
+// It lets the learner ask follow-up questions and have Claude remember the thread.
+async function callAnthropic(systemPrompt, userMessage, image = null, history = []) {
   const key = process.env.ANTHROPIC_API_KEY;
   const model = process.env.ANTHROPIC_MODEL || 'claude-3-5-haiku-latest';
 
-  // Build the user content: text, plus an image block for vision calls.
+  // Build the current user turn: text, plus an image block for vision calls.
   const content = [{ type: 'text', text: userMessage }];
   if (image) {
     content.unshift({
@@ -143,6 +143,13 @@ async function callAnthropic(systemPrompt, userMessage, image = null) {
       source: { type: 'base64', media_type: image.mimeType, data: image.base64 },
     });
   }
+
+  // Prepend prior conversation turns (kept short by the caller), then this turn.
+  const priorTurns = (Array.isArray(history) ? history : [])
+    .filter((t) => t && t.text && (t.role === 'user' || t.role === 'assistant'))
+    .map((t) => ({ role: t.role, content: [{ type: 'text', text: String(t.text) }] }));
+
+  const messages = [...priorTurns, { role: 'user', content }];
 
   const res = await fetchWithTimeout('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -155,7 +162,7 @@ async function callAnthropic(systemPrompt, userMessage, image = null) {
       model,
       max_tokens: 2048,
       system: systemPrompt,
-      messages: [{ role: 'user', content }],
+      messages,
     }),
   });
 
@@ -255,41 +262,62 @@ function providerHasKey(provider) {
 
 // Basic AI-output validation: reject empty / whitespace-only responses so we
 // never show a blank card to the user.
+// Turn a raw provider error string into a short, beginner-friendly reason.
+function friendlyError(msg = '') {
+  const m = String(msg);
+  if (/401|authentication_error|invalid x-api-key/i.test(m))
+    return 'Key ta bhul ba purono. console.anthropic.com -> API Keys -> notun key banao, .env e boshao, server restart koro.';
+  if (/credit|balance|billing|402/i.test(m))
+    return 'Account e credit nei. console.anthropic.com -> Billing -> credit add koro.';
+  if (/404|not_found|model/i.test(m))
+    return 'Model er nam/access somossa. .env e ANTHROPIC_MODEL=claude-haiku-4-5 dao.';
+  if (/429|rate limit/i.test(m))
+    return 'Rate limit — ektu por abar chesta koro.';
+  if (/timed out|timeout|ENOTFOUND|ECONNREFUSED|fetch failed/i.test(m))
+    return 'Internet/firewall somossa — api.anthropic.com e pouchhano jacche na.';
+  return m;
+}
+
 function isUsable(text) {
   return typeof text === 'string' && text.trim().length > 0;
 }
 
-// Route a text request to the correct provider.
-async function runText(provider, systemPrompt, userMessage) {
+// Route a text request to the correct provider. `history` = prior turns (Claude only).
+async function runText(provider, systemPrompt, userMessage, history = []) {
   if (provider === 'gemini') return callGemini(systemPrompt, userMessage);
-  if (provider === 'anthropic') return callAnthropic(systemPrompt, userMessage);
+  if (provider === 'anthropic') return callAnthropic(systemPrompt, userMessage, null, history);
   return callOpenAICompat(provider, systemPrompt, userMessage); // openai | groq | huggingface
 }
 
 // Route a vision request to the correct provider.
-async function runVision(provider, systemPrompt, userText, image) {
+async function runVision(provider, systemPrompt, userText, image, history = []) {
   if (provider === 'gemini') return callGeminiVision(systemPrompt, userText, image);
-  if (provider === 'anthropic') return callAnthropic(systemPrompt, userText, image);
+  if (provider === 'anthropic') return callAnthropic(systemPrompt, userText, image, history);
   return callOpenAICompatVision(provider, systemPrompt, userText, image);
 }
 
 // ---- Public API ------------------------------------------------------------
+// payload.history (optional): [{ role:'user'|'assistant', text }] — enables follow-ups.
 export async function askAI(feature, payload) {
   const systemPrompt = SYSTEM_PROMPTS[feature];
   if (!systemPrompt) throw new Error(`Unknown AI feature: ${feature}`);
 
   const userMessage = buildUserMessage(feature, payload);
   const provider = providerFor(feature);
+  const history = payload.history || [];
+
+  // No real provider/key configured -> genuine demo mode (mock is expected here).
+  if (provider === 'mock' || !providerHasKey(provider)) return callMock(feature, payload);
 
   try {
-    if (provider === 'mock' || !providerHasKey(provider)) return callMock(feature, payload);
-    const out = await runText(provider, systemPrompt, userMessage);
-    // Empty-response guard — fall back instead of showing a blank card.
-    return isUsable(out) ? out : callMock(feature, payload);
+    const out = await runText(provider, systemPrompt, userMessage, history);
+    if (isUsable(out)) return out;
+    throw new Error('Empty response from AI provider');
   } catch (err) {
-    // Never crash the request because of an AI hiccup — degrade gracefully.
-    console.error(`[aiService] ${feature} via ${provider} failed, using mock:`, err.message);
-    return callMock(feature, payload);
+    // A key IS configured, so DON'T hide the failure behind a fake demo answer.
+    // Show the real reason so it can actually be fixed.
+    console.error(`[aiService] ${feature} via ${provider} failed:`, err.message);
+    return `**\u26a0\ufe0f AI provider error (${provider}).**\n\n${friendlyError(err.message)}\n\n_(Eta demo noy \u2014 asol error.)_`;
   }
 }
 
@@ -300,14 +328,17 @@ export async function askAIVision(feature, payload, image) {
 
   const userText = buildUserMessage(feature, payload);
   const provider = providerFor(feature);
+  const history = payload.history || [];
+
+  if (provider === 'mock' || !providerHasKey(provider)) return callMock(feature, payload);
 
   try {
-    if (provider === 'mock' || !providerHasKey(provider)) return callMock(feature, payload);
-    const out = await runVision(provider, systemPrompt, userText, image);
-    return isUsable(out) ? out : callMock(feature, payload);
+    const out = await runVision(provider, systemPrompt, userText, image, history);
+    if (isUsable(out)) return out;
+    throw new Error('Empty response from AI provider');
   } catch (err) {
-    console.error(`[aiService] ${feature} vision via ${provider} failed, using mock:`, err.message);
-    return callMock(feature, payload);
+    console.error(`[aiService] ${feature} vision via ${provider} failed:`, err.message);
+    return `**\u26a0\ufe0f AI provider error (${provider}).**\n\n${friendlyError(err.message)}\n\n_(Eta demo noy \u2014 asol error.)_`;
   }
 }
 
